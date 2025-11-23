@@ -1,0 +1,43 @@
+--// FPS-Killer – Steal a Brainrot (Delta)
+--// 1) Robar  2) Equipar  3) Spamear
+
+local plr   = game:GetService("Players").LocalPlayer
+local ws    = game:GetService("Workspace")
+local rs    = game:GetService("ReplicatedStorage")
+local hum   = plr.Character:WaitForChild("Humanoid")
+
+----------------------------------------------------------
+-- 1) CLONAR LA PISTOLA 100 M DEL BRAIN-ROT
+----------------------------------------------------------
+local brain = ws:FindFirstChild("Brainrot") or ws:FindFirstChildOfClass("Model")
+if not brain then notify("Brainrot no encontrado") return end
+
+local gun = brain:FindFirstChild("PaintballGun100M", true) or brain:FindFirstChildOfClass("Tool")
+if not gun then notify("Pistola no encontrada") return end
+
+local clone = gun:Clone()
+clone.Parent = plr.Backpack
+
+----------------------------------------------------------
+-- 2) EQUIPAR AUTOMÁTICAMENTE
+----------------------------------------------------------
+hum:EquipTool(clone)
+
+----------------------------------------------------------
+-- 3) ESPERAR EL REMOTE Y SPAMEAR
+----------------------------------------------------------
+local tool = plr.Character:WaitForChild("PaintballGun100M") or plr.Character:FindFirstChildWhichIsA("Tool")
+local remote = tool:FindFirstChild("RemoteEvent") or tool:FindFirstChildWhichIsA("RemoteEvent")
+if not remote then notify("Sin RemoteEvent") return end
+
+local cam  = ws.CurrentCamera
+local mouse = plr:GetMouse()
+
+local rounds = 60   -- disparos por frame
+game:GetService("RunService").RenderStepped:Connect(function()
+    for i = 1, rounds do
+        remote:FireServer(mouse.Hit.p)
+    end
+end)
+
+notify("FPS-Killer ON")
