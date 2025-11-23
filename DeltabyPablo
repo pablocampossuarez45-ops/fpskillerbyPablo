@@ -1,0 +1,175 @@
+--[[
+    Delta Executor Hub - Versión Mejorada y Corregida
+    Creado por: AI Assistant
+    Funcionalidades: Velocidad, Salto, Vuelo (Fly)
+    Advertencia: Usar bajo tu propio riesgo.
+]]
+
+-- Servicios
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
+
+-- Jugador
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+-- Función de protección mejorada
+local function protect(obj)
+    if obj and getrawmetatable then
+        local success, err = pcall(function()
+            setreadonly(getrawmetatable(obj), false)
+            getrawmetatable(obj).__namecall = newcclosure(function(self, ...)
+                return self.Kick and error("bypassed") or getrawmetatable(obj).__namecall(self, ...)
+            end)
+            setreadonly(getrawmetatable(obj), true)
+        end)
+    end
+    if obj then
+        obj.RobloxLocked = true
+    end
+end
+
+-- Crear la GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "DeltaHubV2"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = game:GetService("CoreGui")
+protect(screenGui)
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 320, 0, 350)
+mainFrame.Position = UDim2.new(0.5, -160, 0.5, -175)
+mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+protect(mainFrame)
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 12)
+mainCorner.Parent = mainFrame
+
+local title = Instance.new("TextLabel")
+title.Name = "Title"
+title.Size = UDim2.new(1, 0, 0, 40)
+title.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+title.Text = "Delta Hub V2"
+title.TextColor3 = Color3.fromRGB(0, 255, 127)
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 22
+title.Parent = mainFrame
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 12)
+titleCorner.Parent = title
+
+-- Función para crear elementos de la UI
+local function createButton(text, pos)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 270, 0, 35)
+    btn.Position = pos
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.SourceSans
+    btn.TextSize = 16
+    btn.Text = text
+    btn.Parent = mainFrame
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
+    btn.MouseEnter:Connect(function() TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play() end)
+    btn.MouseLeave:Connect(function() TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}):Play() end)
+    return btn
+end
+
+local function createTextBox(placeholder, pos)
+    local box = Instance.new("TextBox")
+    box.Size = UDim2.new(0, 100, 0, 30)
+    box.Position = pos
+    box.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    box.PlaceholderText = placeholder
+    box.Text = ""
+    box.TextColor3 = Color3.fromRGB(255, 255, 255)
+    box.Font = Enum.Font.SourceSans
+    box.TextSize = 14
+    box.Parent = mainFrame
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 5)
+    corner.Parent = box
+    return box
+end
+
+-- --- LÓGICA DE LAS FUNCIONES ---
+
+-- 1. Velocidad
+local speedInput = createTextBox("Velocidad", UDim2.new(0, 190, 0, 60))
+local speedButton = createButton("Aplicar Velocidad", UDim2.new(0, 25, 0, 55))
+speedButton.MouseButton1Click:Connect(function()
+    local newSpeed = tonumber(speedInput.Text)
+    if newSpeed and humanoid then
+        humanoid.WalkSpeed = newSpeed
+        StarterGui:SetCore("ChatMakeSystemMessage", {Text = "[Delta Hub] Velocidad cambiada a " .. newSpeed, Color = Color3.new(0,1,0.5)})
+    end
+end)
+
+-- 2. Salto
+local jumpInput = createTextBox("Salto", UDim2.new(0, 190, 0, 110))
+local jumpButton = createButton("Aplicar Salto", UDim2.new(0, 25, 0, 105))
+jumpButton.MouseButton1Click:Connect(function()
+    local newJump = tonumber(jumpInput.Text)
+    if newJump and humanoid then
+        humanoid.JumpPower = newJump
+        StarterGui:SetCore("ChatMakeSystemMessage", {Text = "[Delta Hub] Salto cambiado a " .. newJump, Color = Color3.new(0,1,0.5)})
+    end
+end)
+
+-- 3. Volar (Fly)
+local flyEnabled = false
+local flyConnection
+local flyButton = createButton("Activar Vuelo (Fly)", UDim2.new(0, 25, 0, 155))
+
+local function toggleFly()
+    flyEnabled = not flyEnabled
+    if flyEnabled then
+        flyButton.Text = "Desactivar Vuelo (Fly)"
+        flyButton.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
+        flyConnection = RunService.Heartbeat:Connect(function()
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+            end
+        end)
+    else
+        flyButton.Text = "Activar Vuelo (Fly)"
+        flyButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        if flyConnection then
+            flyConnection:Disconnect()
+            flyConnection = nil
+        end
+    end
+end
+
+flyButton.MouseButton1Click:Connect(toggleFly)
+
+-- Controles para el vuelo
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed or not flyEnabled then return end
+    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+    
+    local rootPart = character.HumanoidRootPart
+    if input.KeyCode == Enum.KeyCode.Space then
+        rootPart.Velocity = rootPart.CFrame.UpVector * 50
+    elseif input.KeyCode == Enum.KeyCode.LeftShift then
+        rootPart.Velocity = rootPart.CFrame.UpVector * -50
+    end
+end)
+
+
+-- --- HACER LA GUI DRAGGABLE (ARRASTRABLE) ---
+local dragging = false
+local dragStart, startPos
+
+mainFrame.InputBegan:Connect(function(input)
+    if
